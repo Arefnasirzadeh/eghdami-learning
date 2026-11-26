@@ -231,7 +231,16 @@
     var android = [
       steps("کروم اندروید", ["منوی ⋮ بالا سمت راست رو بزن", "«Install app» یا «افزودن به صفحه اصلی» رو انتخاب کن"]),
       steps("سامسونگ اینترنت", ["منوی ☰ پایین صفحه رو بزن", "«افزودن صفحه به» رو بزن", "«صفحه اصلی» رو انتخاب کن"])];
-    var ios = [steps("آیفون (Safari)", ["صفحه رو حتماً توی Safari باز کن", "دکمه اشتراک ⬆️ پایین صفحه رو بزن", "«Add to Home Screen / افزودن به صفحه اصلی» رو انتخاب کن", "بالا سمت راست «Add» رو بزن"])];
+    var ios = [
+      el("a.x-instdl", { href: "eghdami.mobileconfig" }, "⬇️ دانلود و نصب روی آیفون"),
+      el("ol.x-inst__steps",
+        el("li", "روی «Allow / اجازه» بزن."),
+        el("li", "برو تنظیمات (Settings)، بالای صفحه «Profile Downloaded / نمایه دانلود شد» رو بزن."),
+        el("li", "«Install / نصب» رو بزن (اگه نوشت Not Verified عادیه). آیکون EGHDAMI روی صفحه‌ی اصلی میاد.")),
+      el("p.x-instbar__hint", "این دکمه فقط توی سافاری کار می‌کنه."),
+      el("details.x-instalt",
+        el("summary", "راه دوم: افزودن دستی از سافاری"),
+        steps("آیفون (Safari)", ["صفحه رو حتماً توی Safari باز کن", "دکمه اشتراک ⬆️ پایین صفحه رو بزن", "«Add to Home Screen / افزودن به صفحه اصلی» رو انتخاب کن", "بالا سمت راست «Add» رو بزن"]))];
     var body = os === "ios" ? ios : os === "android" ? android : android.concat(ios);
     var title = os === "ios" ? "🍎 نصب روی آیفون" : os === "android" ? "🤖 نصب روی اندروید" : "📲 نصب اپ روی گوشی";
     var sheet = el("div.x-sheet", { onclick: function (e) { if (e.target === sheet) sheet.hidden = true; } },
@@ -256,15 +265,51 @@
   var ON_GH = /(^|\.)github\.io$/i.test(location.hostname || "");
   var INSTALL_PARAM = "";
   try { INSTALL_PARAM = (new URLSearchParams(location.search).get("install") || "").toLowerCase(); } catch (e) { /* no params */ }
+  /* off github.io: the sandboxed frame may block new tabs, so always show the link to copy */
+  var linkSheet = null;
+  function openLinkSheet() {
+    var addr = el("p.x-instlink", { dir: "ltr", lang: "en" }, PWA_URL);
+    var copyBtn = el("button.x-instbtn.x-instbtn--on", { type: "button" }, "📋 کپی لینک");
+    function selectAddr() {
+      try { var r = document.createRange(); r.selectNodeContents(addr); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) { /* no selection api */ }
+    }
+    function done() { copyBtn.textContent = "کپی شد ✓"; }
+    function fallback() {
+      selectAddr();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      if (ok) done();
+    }
+    copyBtn.addEventListener("click", function () {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(PWA_URL).then(done, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+    var sheet = el("div.x-sheet", { onclick: function (e) { if (e.target === sheet) sheet.hidden = true; } },
+      el("div.x-sheet__body", { role: "dialog", "aria-label": "نصب اپ" },
+        el("div.x-row.x-row--between", el("h2.x-h2", "نصب اپ"), el("button.x-icon", { type: "button", "aria-label": "بستن", onclick: function () { sheet.hidden = true; } }, "✕")),
+        addr, copyBtn,
+        el("p.x-inst__note", "این لینک رو کپی کن و توی کروم (اندروید) یا سافاری (آیفون) باز کن؛ دکمه‌ی نصب همونجاست.")));
+    var host = document.getElementById("app") || document.body;
+    if (linkSheet && linkSheet.parentNode) linkSheet.replaceWith(sheet); else host.appendChild(sheet);
+    linkSheet = sheet;
+  }
+  function tapOut(e) {
+    var url = this.href;
+    e.preventDefault();
+    try { window.open(url, "_blank"); } catch (err) { /* blocked in the sandbox */ }
+    openLinkSheet();
+  }
   App.installBar = function () {
     var showBar = !isInstalled() || (ON_GH && (INSTALL_PARAM === "android" || INSTALL_PARAM === "ios"));
     if (!ON_GH) {
       return el("section.x-inst.x-instbar", { hidden: !showBar, "aria-label": "نصب اپ" },
         el("p.x-instbar__t", "📲 نصب اپ روی گوشی"),
         el("div.x-instbar__btns",
-          el("a.x-instbtn" + (DEVICE === "android" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=android", target: "_blank", rel: "noopener" }, "🤖 نصب روی اندروید"),
-          el("a.x-instbtn" + (DEVICE === "ios" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=ios", target: "_blank", rel: "noopener" }, "🍎 نصب روی آیفون")),
-        el("p.x-instbar__hint", "نسخه‌ی قابل نصب در صفحه‌ی جدید باز می‌شه؛ اونجا اپ رو روی گوشی نصب کن."));
+          el("a.x-instbtn" + (DEVICE === "android" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=android", target: "_blank", rel: "noopener", onclick: tapOut }, "🤖 نصب روی اندروید"),
+          el("a.x-instbtn" + (DEVICE === "ios" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=ios", target: "_blank", rel: "noopener", onclick: tapOut }, "🍎 نصب روی آیفون")),
+        el("p.x-instbar__hint", "اگه صفحه باز نشد، لینک رو کپی کن."));
     }
     return el("section.x-inst.x-instbar", { hidden: !showBar, "aria-label": "نصب اپ" },
       el("p.x-instbar__t", "📲 نصب اپ روی گوشی"),
