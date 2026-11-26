@@ -1,4 +1,4 @@
-// Content data for the English Coach app. Load with <script src="content.js"></script>; exposes window.CONTENT.
+// Content data for the English Coach app. Load with <script src="content.js"><\/script>; exposes window.CONTENT.
 window.CONTENT = {
 levels: [
  {id:"A1",fa:"مبتدی"},{id:"A2",fa:"پایه"},{id:"B1",fa:"متوسط"},{id:"B2",fa:"بالاتر از متوسط"},{id:"C1",fa:"پیشرفته"}
