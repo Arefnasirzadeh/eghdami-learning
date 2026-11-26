@@ -8,9 +8,9 @@
 
 ## 📲 دانلود و نصب اپ
 
-### [🤖 نصب روی اندروید](https://arefnasirzadeh.github.io/eghdami-learning/?install=android)
+### [🤖 نصب روی اندروید](https://github.com/Arefnasirzadeh/eghdami-learning/releases/latest/download/EGHDAMI-Learning.apk)
 
-### [🍎 نصب روی آیفون](https://arefnasirzadeh.github.io/eghdami-learning/eghdami.mobileconfig)
+### [🍎 نصب روی آیفون](https://github.com/Arefnasirzadeh/eghdami-learning/releases/latest/download/eghdami.mobileconfig)
 
 ### [🌐 باز کردن اپ در مرورگر](https://arefnasirzadeh.github.io/eghdami-learning/)
 
@@ -21,8 +21,9 @@
 ---
 
 ### 🤖 اندروید
-۱. روی «نصب روی اندروید» بزن تا اپ توی کروم باز بشه.
-۲. روی دکمه‌ی «نصب» بزن. اگه دکمه نیومد: منوی ⋮ کروم ← «Install app / افزودن به صفحه اصلی».
+۱. روی «نصب روی اندروید» بزن تا فایل EGHDAMI-Learning.apk دانلود بشه.
+۲. فایل رو باز کن و «نصب / Install» رو بزن. اگه گوشی پرسید، اجازه‌ی «نصب از این منبع» رو بده.
+۳. آیکون EGHDAMI روی گوشی میاد.
 
 ### 🍎 آیفون (فقط با سافاری)
 ۱. روی «نصب روی آیفون» بزن و «Allow / اجازه» رو بزن.
