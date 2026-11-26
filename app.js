@@ -206,7 +206,7 @@
         el("div.x-row.x-row--between", el("h2.x-h2", "تنظیمات"), el("button.x-icon", { type: "button", "aria-label": "بستن", onclick: function () { sheet.hidden = true; } }, "✕")),
         el("div.x-row.x-row--between", el("strong", "سرعت صدا"), val), range,
         el("p.x-muted", synth ? "صدا: " + (voice ? voice.name : "پیش‌فرض دستگاه") : "این مرورگر صدای خودکار نداره."),
-        el("button.x-sec", { type: "button", onclick: function () { speak("Hello Aref, this is your English coach."); } }, "🔊 امتحان صدا")));
+        el("button.x-sec", { type: "button", onclick: function () { speak("Hello Alireza, this is your English coach."); } }, "🔊 امتحان صدا")));
     return sheet;
   }
 
@@ -251,13 +251,48 @@
     } catch (e) { openGuide(fallback); }
   }
   var DEVICE = IS_IOS ? "ios" : IS_ANDROID ? "android" : "";
+  /* off github.io (inside Hark or elsewhere) install happens on the published copy */
+  var PWA_URL = "https://arefnasirzadeh.github.io/eghdami-learning/";
+  var ON_GH = /(^|\.)github\.io$/i.test(location.hostname || "");
+  var INSTALL_PARAM = "";
+  try { INSTALL_PARAM = (new URLSearchParams(location.search).get("install") || "").toLowerCase(); } catch (e) { /* no params */ }
   App.installBar = function () {
-    return el("section.x-inst.x-instbar", { hidden: isInstalled(), "aria-label": "نصب اپ" },
+    var showBar = !isInstalled() || (ON_GH && (INSTALL_PARAM === "android" || INSTALL_PARAM === "ios"));
+    if (!ON_GH) {
+      return el("section.x-inst.x-instbar", { hidden: !showBar, "aria-label": "نصب اپ" },
+        el("p.x-instbar__t", "📲 نصب اپ روی گوشی"),
+        el("div.x-instbar__btns",
+          el("a.x-instbtn" + (DEVICE === "android" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=android", target: "_blank", rel: "noopener" }, "🤖 نصب روی اندروید"),
+          el("a.x-instbtn" + (DEVICE === "ios" ? ".x-instbtn--on" : ""), { href: PWA_URL + "?install=ios", target: "_blank", rel: "noopener" }, "🍎 نصب روی آیفون")),
+        el("p.x-instbar__hint", "نسخه‌ی قابل نصب در صفحه‌ی جدید باز می‌شه؛ اونجا اپ رو روی گوشی نصب کن."));
+    }
+    return el("section.x-inst.x-instbar", { hidden: !showBar, "aria-label": "نصب اپ" },
       el("p.x-instbar__t", "📲 نصب اپ روی گوشی"),
       el("div.x-instbar__btns",
         el("button.x-instbtn" + (DEVICE === "android" ? ".x-instbtn--on" : ""), { type: "button", onclick: function () { promptInstall("android"); } }, "🤖 نصب روی اندروید"),
         el("button.x-instbtn" + (DEVICE === "ios" ? ".x-instbtn--on" : ""), { type: "button", onclick: function () { openGuide("ios"); } }, "🍎 نصب روی آیفون")));
   };
+  /* github.io only: ?install=android|ios starts that flow on load */
+  function autoInstall() {
+    if (!ON_GH) return;
+    if (INSTALL_PARAM === "ios") { openGuide("ios"); return; }
+    if (INSTALL_PARAM !== "android") return;
+    var done = false;
+    function tryPrompt() {
+      if (done) return; done = true;
+      if (!installEvt) { openGuide("android"); return; }
+      var ev = installEvt;
+      try {
+        Promise.resolve(ev.prompt()).then(function () {
+          installEvt = null;
+          Promise.resolve(ev.userChoice).then(function (c) { if (c && c.outcome === "accepted") hideInstall(); });
+        }, function () { openGuide("android"); });
+      } catch (e) { openGuide("android"); }
+    }
+    if (installEvt) { tryPrompt(); return; }
+    window.addEventListener("beforeinstallprompt", function () { setTimeout(tryPrompt, 0); }, { once: true });
+    setTimeout(tryPrompt, 1500);
+  }
 
   App.start = function () {
     var root = document.getElementById("app");
@@ -270,10 +305,13 @@
     }));
     toastEl = el("div.x-toast", { role: "status", "aria-live": "polite" });
     root.append(el("header.x-top", el("span.x-top__mark", { "aria-hidden": "true" }, "E"), el("div.x-top__t", titleEl, subEl),
-      el("button.x-icon.x-inst", { type: "button", "aria-label": "نصب اپ", hidden: isInstalled(), onclick: function () { if (IS_IOS) openGuide("ios"); else promptInstall(DEVICE); } }, "📲"),
+      ON_GH
+        ? el("button.x-icon.x-inst", { type: "button", "aria-label": "نصب اپ", hidden: isInstalled(), onclick: function () { if (IS_IOS) openGuide("ios"); else promptInstall(DEVICE); } }, "📲")
+        : el("a.x-icon.x-inst", { href: PWA_URL, target: "_blank", rel: "noopener", "aria-label": "نصب اپ", hidden: isInstalled() }, "📲"),
       el("button.x-icon", { type: "button", "aria-label": "تنظیمات", onclick: function () { pickVoice(); sheet.replaceWith(sheet = settingsSheet()); sheet.hidden = false; } }, "⚙︎")),
       screen, App.dock = el("div"), tabbar, sheet, toastEl);
     App.go(tabs[0].id);
+    autoInstall();
   };
 })();
 
@@ -316,7 +354,7 @@
     s.append(
       A.installBar(),
       el("section.x-hero",
-        photo("x-ph-desk", "عارف پشت میز کارش"),
+        photo("x-ph-desk", "علیرضا پشت میز کارش"),
         el("div.x-hero__copy",
           el("p.x-hero__label.x-en", "EGHDAMI LEARNING"),
           el("p.x-hero__tag", "امروز یه قدم به انگلیسی بریتیش نزدیک‌تر"),
@@ -346,7 +384,7 @@
           } }, "🔊 تلفظ"),
           el("button.x-sec", { type: "button", onclick: function () { A.go("words504", { lesson: w.lesson }); } }, "رفتن به درس"))) : null,
       el("section.x-photo.x-photo--daily",
-        photo("x-ph-reading", "عارف در حال خواندن"),
+        photo("x-ph-reading", "علیرضا در حال خواندن"),
         el("div.x-photo__copy",
           el("p.x-photo__eyebrow", "تمرین ۱۰ دقیقه‌ای امروز"),
           el("h2.x-photo__title", "هر روز فقط ۱۰ دقیقه"),
@@ -369,11 +407,11 @@
             el("span.x-muted", "✓ تموم شد · ساعت " + hhmm(h.when)));
         }) : el("p.x-muted", "هنوز چیزی رو تموم نکردی. داستان، پادکست، گرامر یا سناریوهای تموم‌شده اینجا میان.")),
       el("section.x-photo.x-photo--class",
-        photo("x-ph-class", "عارف در حال تدریس سر کلاس"),
+        photo("x-ph-class", "علیرضا در حال تدریس سر کلاس"),
         el("div.x-photo__copy",
           el("p.x-photo__eyebrow", "درباره مدرس"),
           el("h2.x-photo__title", "کلاس‌های اقدام آکادمی"),
-          el("p.x-photo__text", "آموزش انگلیسی بریتیش با عارف اقدامی"))),
+          el("p.x-photo__text", "آموزش انگلیسی بریتیش با علیرضا اقدامی"))),
       el("section.x-contact",
         el("h3.x-h3", "✉️ ارتباط با ما"),
         el("p.x-muted", "برای کلاس‌ها و مشاوره، در اینستاگرام پیام بده یا تماس بگیر."),

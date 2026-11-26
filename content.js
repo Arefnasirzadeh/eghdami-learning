@@ -78,7 +78,7 @@ stories: [
   q:[["What did the system replay?",["Films","Finished conversations","Music"],1],["What did Mina notice?",["It focused on its mistakes","It was broken","It deleted logs"],0],["What was the compromise?",["Shut it down","Continue under safeguards","Sell it"],1]]}
 ],
 shadowing: {
- A1:["Hello, my name is Aref.","I live in a small city.","I drink tea every morning.","Where is the bus station?","I like to play football with my friends.","Can I have a glass of water, please?","My brother is older than me.","See you tomorrow."],
+ A1:["Hello, my name is Alireza.","I live in a small city.","I drink tea every morning.","Where is the bus station?","I like to play football with my friends.","Can I have a glass of water, please?","My brother is older than me.","See you tomorrow."],
  A2:["I usually go to the gym after work.","Could you speak a little more slowly?","I've been learning English for two months.","How much does this jacket cost?","I'm sorry, I didn't catch your name.","It was raining, so we stayed at home.","What time does the store close tonight?","I'd like to book a table for two."],
  B1:["I'm thinking about changing my job next year.","If I had more time, I would travel more often.","Could you tell me how to get to the city centre?","I've never been to a country outside Iran.","The meeting was postponed because the manager was sick.","I'd rather stay home than go out in this weather.","It took me a while to get used to the new schedule.","Let me know if you need any help with that."],
  B2:["Despite the delays, the project was finished on time.","I'm not entirely convinced that this is the best approach.","Had I known about the traffic, I would have left earlier.","The new policy has had a significant impact on small businesses.","She's been working on her pronunciation for months, and it shows.","It's worth considering the long-term consequences of this decision.","I couldn't agree more with what you just said.","We need to strike a balance between speed and quality."],
@@ -178,7 +178,7 @@ scenarios: [
    {ai:"All done. What do you think?",keys:[["great","good","love","perfect","nice","thanks"]],model:"It looks great, thanks!"}]},
  {id:"interview",level:"B1",title:"Job interview at a tech startup",fa:"مصاحبه کاری استارتاپ",
   turns:[
-   {ai:"Thanks for coming in. Could you tell me a little about yourself?",keys:[["i am","i'm","work","experience","years","name"]],model:"Sure. I'm Aref, and I have a few years of experience in tech and digital projects."},
+   {ai:"Thanks for coming in. Could you tell me a little about yourself?",keys:[["i am","i'm","work","experience","years","name"]],model:"Sure. I'm Alireza, and I have a few years of experience in tech and digital projects."},
    {ai:"Why do you want to work with us?",keys:[["because","interested","ai","product","team","grow","learn"]],model:"Because I'm really interested in AI, and I like how your team builds products."},
    {ai:"What's your biggest strength?",keys:[["strength","good at","fast","learn","team","problem","organised"]],model:"I learn fast and I'm good at solving problems."},
    {ai:"Tell me about a time you faced a difficult problem.",keys:[["once","when","problem","solved","project","team","fixed"]],model:"Once, our project failed a day before launch, so I organised the team and we fixed it overnight."},
