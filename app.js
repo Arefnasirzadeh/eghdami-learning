@@ -210,6 +210,55 @@
     return sheet;
   }
 
+  /* ---------- install: always offered until the app is installed ---------- */
+  var installEvt = null;
+  var UA = navigator.userAgent || "";
+  var IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var IS_ANDROID = /Android/i.test(UA);
+  function isInstalled() {
+    try { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch (e) { return false; }
+  }
+  function hideInstall() { document.querySelectorAll(".x-inst").forEach(function (n) { n.hidden = true; }); }
+  try {
+    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); installEvt = e; });
+    window.addEventListener("appinstalled", function () { installEvt = null; hideInstall(); });
+  } catch (e) { /* no install events */ }
+  var guide = null;
+  function steps(title, list) {
+    return el("div.x-inst__group", el("p.x-inst__h", title), el("ol.x-inst__steps", list.map(function (t) { return el("li", t); })));
+  }
+  function openGuide(os) {
+    var android = [
+      steps("کروم اندروید", ["منوی ⋮ بالا سمت راست رو بزن", "«Install app» یا «افزودن به صفحه اصلی» رو انتخاب کن"]),
+      steps("سامسونگ اینترنت", ["منوی ☰ پایین صفحه رو بزن", "«افزودن صفحه به» رو بزن", "«صفحه اصلی» رو انتخاب کن"])];
+    var ios = [steps("آیفون (Safari)", ["صفحه رو حتماً توی Safari باز کن", "دکمه اشتراک ⬆️ پایین صفحه رو بزن", "«Add to Home Screen / افزودن به صفحه اصلی» رو انتخاب کن", "بالا سمت راست «Add» رو بزن"])];
+    var body = os === "ios" ? ios : os === "android" ? android : android.concat(ios);
+    var title = os === "ios" ? "🍎 نصب روی آیفون" : os === "android" ? "🤖 نصب روی اندروید" : "📲 نصب اپ روی گوشی";
+    var sheet = el("div.x-sheet", { onclick: function (e) { if (e.target === sheet) sheet.hidden = true; } },
+      el("div.x-sheet__body", { role: "dialog", "aria-label": title },
+        el("div.x-row.x-row--between", el("h2.x-h2", title), el("button.x-icon", { type: "button", "aria-label": "بستن", onclick: function () { sheet.hidden = true; } }, "✕")),
+        body,
+        el("p.x-inst__note", "⚠️ اگه داخل اینستاگرام/تلگرام بازش کردی، اول «Open in browser / باز کردن در مرورگر» رو بزن.")));
+    if (guide) guide.replaceWith(sheet); else document.getElementById("app").appendChild(sheet);
+    guide = sheet;
+  }
+  function promptInstall(fallback) {
+    if (!installEvt) { openGuide(fallback); return; }
+    var ev = installEvt; installEvt = null;
+    try {
+      ev.prompt();
+      Promise.resolve(ev.userChoice).then(function (c) { if (c && c.outcome === "accepted") hideInstall(); });
+    } catch (e) { openGuide(fallback); }
+  }
+  var DEVICE = IS_IOS ? "ios" : IS_ANDROID ? "android" : "";
+  App.installBar = function () {
+    return el("section.x-inst.x-instbar", { hidden: isInstalled(), "aria-label": "نصب اپ" },
+      el("p.x-instbar__t", "📲 نصب اپ روی گوشی"),
+      el("div.x-instbar__btns",
+        el("button.x-instbtn" + (DEVICE === "android" ? ".x-instbtn--on" : ""), { type: "button", onclick: function () { promptInstall("android"); } }, "🤖 نصب روی اندروید"),
+        el("button.x-instbtn" + (DEVICE === "ios" ? ".x-instbtn--on" : ""), { type: "button", onclick: function () { openGuide("ios"); } }, "🍎 نصب روی آیفون")));
+  };
+
   App.start = function () {
     var root = document.getElementById("app");
     titleEl = el("h1"); subEl = el("p.x-top__sub");
@@ -220,7 +269,9 @@
         el("b", { "aria-hidden": "true" }, t.icon), el("span.x-tab__l", t.label), t.soon ? el("small", "به‌زودی") : null);
     }));
     toastEl = el("div.x-toast", { role: "status", "aria-live": "polite" });
-    root.append(el("header.x-top", el("span.x-top__mark", { "aria-hidden": "true" }, "E"), el("div.x-top__t", titleEl, subEl), el("button.x-icon", { type: "button", "aria-label": "تنظیمات", onclick: function () { pickVoice(); sheet.replaceWith(sheet = settingsSheet()); sheet.hidden = false; } }, "⚙︎")),
+    root.append(el("header.x-top", el("span.x-top__mark", { "aria-hidden": "true" }, "E"), el("div.x-top__t", titleEl, subEl),
+      el("button.x-icon.x-inst", { type: "button", "aria-label": "نصب اپ", hidden: isInstalled(), onclick: function () { if (IS_IOS) openGuide("ios"); else promptInstall(DEVICE); } }, "📲"),
+      el("button.x-icon", { type: "button", "aria-label": "تنظیمات", onclick: function () { pickVoice(); sheet.replaceWith(sheet = settingsSheet()); sheet.hidden = false; } }, "⚙︎")),
       screen, App.dock = el("div"), tabbar, sheet, toastEl);
     App.go(tabs[0].id);
   };
@@ -251,22 +302,6 @@
     var img = src.cloneNode(false); img.removeAttribute("id"); img.removeAttribute("hidden"); img.className = "x-photo__img"; img.alt = alt;
     return img;
   }
-  /* PWA install: only when the browser offers it; silent everywhere else */
-  var installEvt = null;
-  try {
-    window.addEventListener("beforeinstallprompt", function (e) {
-      e.preventDefault(); installEvt = e;
-      document.querySelectorAll(".x-install").forEach(function (b) { b.hidden = false; });
-    });
-  } catch (e) { /* no install support */ }
-  function installBtn() {
-    var b = el("button.x-primary.x-install", { type: "button", hidden: !installEvt, onclick: function () {
-      if (!installEvt) return;
-      try { installEvt.prompt(); } catch (e) { /* ignore */ }
-      installEvt = null; document.querySelectorAll(".x-install").forEach(function (x) { x.hidden = true; });
-    } }, "📲 نصب اپ");
-    return b;
-  }
   var IG = "https://instagram.com/eghdam_academy";
   function contactBtns() {
     return el("div.x-contact__btns",
@@ -279,6 +314,7 @@
     var marked = Object.keys(st.marks).map(function (k) { return st.marks[k]; }).filter(function (m) { return m.star || m.note.trim(); });
     var gp = A.gramProgress ? A.gramProgress() : null;
     s.append(
+      A.installBar(),
       el("section.x-hero",
         photo("x-ph-desk", "عارف پشت میز کارش"),
         el("div.x-hero__copy",
@@ -291,7 +327,6 @@
         el("div.x-stat", el("span.x-stat__i", { "aria-hidden": "true" }, "🎯"), el("b.x-en", st.level), el("small", "سطح")),
         el("div.x-stat", el("span.x-stat__i", { "aria-hidden": "true" }, "⚡"), el("b", A.fa(st.xp)), el("small", "XP")),
         gp ? el("div.x-stat", el("span.x-stat__i", { "aria-hidden": "true" }, "📐"), el("b", A.fa(gp.done) + "/" + A.fa(gp.total)), el("small", "گرامر")) : null),
-      installBtn(),
       A.gramHomeCard ? A.gramHomeCard() : null,
       idm ? el("div.x-card.x-daycard",
         el("div.x-row.x-row--between", el("strong.x-cardh", "💬 اصطلاح روز"), el("span.pill", "انگلیسی بریتانیایی")),
